@@ -1,49 +1,83 @@
-# Proyecto Híbrido — Self-Evolving Autonomous Agent
+# 🧠 Hierarchical Memory
+> **Autonomous 8-level hierarchical long-term memory for local LLMs with homeostatic consolidation, hybrid retrieval, epistemic provenance, and ZERO external dependencies.**
 
-Arquitectura híbrida de evolución autónoma para modelos de lenguaje locales (oMLX / MLX LM).
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Dependencies](https://img.shields.io/badge/Dependencies-0%20(Standard%20Library)-brightgreen.svg)]()
+[![Backend](https://img.shields.io/badge/LLM-Local%20(OpenAI--Compatible)-orange.svg)]()
 
-## Características Principales
+Unlike traditional vector-only RAG databases, **Hierarchical Memory** is a bio-inspired cognitive architecture. It models persistent long-term neocortical knowledge as an **8-level deep semantic ontology** and runs an autonomous **homeostatic background loop ("sleep cycle")** that continuously consolidates, forgets, merges, repairs, and self-tests memories while idle.
 
-1. **Ejecución Multi-Lenguaje Universal**: El agente no está restringido a Python. Puede escribir y ejecutar scripts en **Bash**, **Python**, **Node.js** o ejecutables compilados. El entorno analiza automáticamente el *Shebang* (`#!`) o la extensión del archivo y aplica permisos de ejecución (`chmod +x`).
-2. **Soporte Multi-Acción**: El agente puede encadenar múltiples acciones lógicas en un solo turno (por ejemplo, escribir un script y ejecutarlo de inmediato) mediante la clave `"actions": [...]`.
-3. **Aislamiento Seguro en Docker**: Cada ejecución se realiza en un contenedor efímero montando únicamente `/body` en modo lectura/escritura y con directorio de trabajo fijado en `/body`.
-4. **Sistema de Respaldo del Host**: Generación de backups automáticos comprimidos (`.tar.gz`) en `experiment/backups/` fuera del alcance y la percepción del agente.
-5. **Filtro Anti-Bucles y Streaming CoT**: El cliente HTTP lee los fragmentos de razonamiento en tiempo real y corta bucles repetitivos si detecta n-gramas redundantes.
-6. **Auto-Rescate de Acciones**: Si el modelo agota la ventana de generación dentro del pensamiento sin emitir el bloque de respuesta final, el sistema rescata la acción formulada en el pensamiento.
+---
 
-## Requisitos
+## ✨ Key Highlights
 
-- macOS con Apple Silicon (para servidor MLX) o endpoint compatible con OpenAI API.
-- Docker Desktop o daemon compatible (`docker run`).
-- Python 3.10+.
+- **8-Level Hierarchical Ontology:** Organizes facts from universal domains down to atomic cells:
+  Planeta ➜ País ➜ Ciudad ➜ Fábrica ➜ Persona ➜ Órgano ➜ Tejido ➜ Célula
+- **Zero External Dependencies:** Built **100% on Python Standard Library** (http.server, threading, urllib, json). Zero pip install required.
+- **Homeostatic Consolidation (Sleep Cycle):** While the agent is idle, an autonomous background loop runs:
+  - selftest: Formulates hypothetical questions to probe its own tree and validates recall paths.
+  - decay: Archives low-importance memories using an exponential half-life curve.
+  - dedupe & merge: Identifies and fuses redundant facts and sibling branches.
+  - repair: Prunes orphan branches and rebuilds lexical indices.
+- **Hybrid Multi-Method Retrieval:** Combines exact match, BM25 lexical ranking, LLM semantic query expansion, and tree beam-search, fused via **Reciprocal Rank Fusion (RRF)**.
+- **Epistemic Provenance (Source Tracking):** Automatically attributes every ingested fact to its original paper, textbook, author, or timestamped conversation to prevent hallucinations.
+- **Native Real-Time Web Console:** Complete dark-mode dashboard with visual cognitive pipelines, tree rendering, and instant loop pause/resume.
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Python 3.10+
+- Any OpenAI-compatible local LLM endpoint (e.g., llama-server, vLLM, Ollama). Tested with Nail-Qwen3.6-35B.
+
+### 1. Clone & Run
+```bash
+git clone https://github.com/mlalejandre/hierarchical-memory.git
+cd hierarchical-memory
+```
+
+### 2. Launch the Web Interface
+```bash
+python3 iniciar_interfaz.py
+```
+*The native console will automatically launch at http://127.0.0.1:8765.*
+
+---
+
+## 🖥️ Web Console Overview
+
+- **Real-Time Cognitive Pipeline:** Watch the agent switch between repair, decay, describe, and selftest in real time.
+- **Chapter-Length Ingestion:** Paste entire textbook chapters or articles without context overflow; the built-in chunker extracts atomic concepts natively.
+- **Tree Inspector:** Click 🌲 Ver Árbol to inspect your 8-level directory structure.
+- **Epistemic Traceability:** View verified sources and citations behind every answer.
+
+---
+
+## 📐 Memory Decay Formula
+
+Memories do not decay linearly. Vital facts (identity, safety directives) persist exponentially longer than transient details:
+
+$$\text{Importancia Efectiva} = \text{Importancia} \cdot e^{-\frac{\text{Edad}}{\tau \cdot \text{Importancia}^3}}$$
+
+When effective importance drops below the threshold, the fact is safely moved to _archivo/ (dormant), but is automatically restored if queried again in the future.
+
+---
+
+## 🛠️ Configuration
+
+Configure your local model endpoint via environment variables:
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-Arranque
-code
-Bash
-# Iniciar con servidor MLX automático:
-python3 src/main.py
+export SERVER_IP="192.168.1.200"
+export SERVER_USER="tu_usuario"
+export LLM_BASE_URL="http://192.168.1.200:8087/v1"
+export LLM_MODEL="nail-35b"
+export MEM_TAU=20
+```
 
-# O con servidor oMLX iniciado previamente:
-export MLX_AUTOSTART=0
-python3 src/main.py
-## ⚠️ Advertencias
+---
 
-Este es un proyecto **experimental**. El agente puede escribir y ejecutar código (Bash, Python, Node.js o binarios) de forma **autónoma y sin supervisión humana en el loop**, dentro de contenedores Docker efímeros con acceso a red.
-
-- El aislamiento depende de la configuración de Docker (`--read-only`, límites de CPU/memoria, `--pids-limit`), pero **no es una sandbox a prueba de escapes**.
-- No ejecutes esto en una máquina con datos sensibles o credenciales accesibles desde el entorno.
-- No dejes el proceso corriendo indefinidamente sin revisar los backups y logs generados en `experiment/`.
-- Úsalo bajo tu propio riesgo.
-
-## ⚠️ Advertencias
-
-Este es un proyecto **experimental**. El agente puede escribir y ejecutar código (Bash, Python, Node.js o binarios) de forma **autónoma y sin supervisión humana en el loop**, dentro de contenedores Docker efímeros con acceso a red.
-
-- El aislamiento depende de la configuración de Docker (--read-only, límites de CPU/memoria, --pids-limit), pero no es una sandbox a prueba de escapes.
-- No ejecutes esto en una máquina con datos sensibles o credenciales accesibles desde el entorno.
-- No dejes el proceso corriendo indefinidamente sin revisar los backups y logs generados en experiment/.
-- Úsalo bajo tu propio riesgo.
+## 📄 License
+MIT License. Free for personal and commercial research.
